@@ -1,170 +1,137 @@
-## 1. Choice of Base Image
- The base image used to build the containers is `node:16-alpine3.16`. It is derived from the Alpine Linux distribution, making it lightweight and compact. 
- Used 
- 1. Client:`node:16-alpine3.16`
- 2. Backend: `node:16-alpine3.16`
- 3.Mongo : `mongo:6.0 `
-       
+# YOLO APP
 
-## 2. Dockerfile directives used in the creation and running of each container.
- I used two Dockerfiles. One for the Client and the other one for the Backend.
+## 1. Base Image Selection
 
-**Client Dockerfile**
+Alpine Linux was chosen as the base image for its lightweight nature and strong security features. Known for minimalism, it ensures smaller Docker image sizes and faster builds. Alpine's wide support and compatibility also make it ideal for efficient containerized applications, prioritizing both performance and security.
 
-```
-# Build stage
-FROM node:16-alpine3.16 as build-stage
+## 2. Dockerfile Directives
 
-# Set the working directory inside the container
-WORKDIR /client
+### Dockerfile Creation and Running Directives
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+The Dockerfile includes directives to define the build process for each service. Key directives used are:
 
-# Install dependencies and clears the npm cache and removes any temporary files
-RUN npm install --only=production && \
-    npm cache clean --force && \
-    rm -rf /tmp/*
+- **FROM:** Specifies the base image for the service.
+- **WORKDIR:** Sets the working directory inside the container.
+- **COPY:** Copies files from the host machine to the container.
+- **RUN:** Executes commands during the build process.
+- **CMD:** Specifies the command to run when the container starts.
+- **EXPOSE:** Exposes ports from the container to the host machine.
 
-# Copy the rest of the application code
-COPY . .
+## 3. Docker-Compose Networking
 
-# Build the application and  remove development dependencies
-RUN npm run build && \
-    npm prune --production
+### Application Port Allocation and Bridge Network Implementation
 
-# Production stage
-FROM node:16-alpine3.16 as production-stage
-
-WORKDIR /client
-
-# Copy only the necessary files from the build stage
-COPY --from=build-stage /client/build ./build
-COPY --from=build-stage /client/public ./public
-COPY --from=build-stage /client/src ./src
-COPY --from=build-stage /client/package*.json ./
-
-# Set the environment variable for the app
-ENV NODE_ENV=production
-
-# Expose the port used by the app
-EXPOSE 3000
-
-# Prune the node_modules directory to remove development dependencies and clears the npm cache and removes any temporary files
-
-
-# Start the application
-CMD ["npm", "start"]
+Docker Compose is used to manage multi-container applications. Networking and port allocation are configured in the `docker-compose.yml` file:
 
 ```
-**Backend Dockerfile**
+version: '3.8'
 
-```
-# Set base image
-FROM node:16-alpine3.16
-
-# Set the working directory
-WORKDIR /backend
-
-# Copy package.json and package-lock.json to the container
-COPY package*.json ./
-
-# Install dependencies and clears the npm cache and removes any temporary files
-RUN npm install --only=production && \
-    npm cache clean --force && \
-    rm -rf /tmp/*
-
-# Copy the rest of the application code
-COPY . .
-
-# Set the environment variable for the app
-ENV NODE_ENV=production
-
-# Expose the port used by the app
-EXPOSE 5000
-
-# Prune the node_modules directory to remove development dependencies and clears the npm cache and removes any temporary files
-RUN npm prune --production && \
-    npm cache clean --force && \
-    rm -rf /tmp/*
-
-# Start the application
-CMD ["npm", "start"]
-
-```
-
-## 3. Docker Compose Networking
-The (docker-compose.yml) defines the networking configuration for the project. It includes the allocation of application ports. The relevant sections are as follows:
-
-
-```
 services:
+  # Backend service configuration
   backend:
-    # ...
+    build: ./backend
+    image: estheruge/backend-service:v1.0.0
+    container_name: backend_container
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/yolomy
     ports:
       - "5000:5000"
     networks:
-      - yolo-network
+      - custom_network
+    depends_on:
+      - mongo
 
+  # Client service configuration
   client:
-    # ...
+    build: ./client
+    image: estheruge/client-service:v1.0.0
+    container_name: client_container
+    environment:
+      - NODE_ENV=production
     ports:
       - "3000:3000"
+    depends_on:
+      - backend
     networks:
-      - yolo-network
-  
-  mongodb:
-    # ...
+      - custom_network
+    stdin_open: true
+    tty: true
+
+  # MongoDB service configuration
+  mongo:
+    image: mongo:latest
+    container_name: mongo_container
     ports:
       - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
     networks:
-      - yolo-network
+      - custom_network
 
 networks:
-  yolo-network:
+  custom_network:
     driver: bridge
-```
-In this configuration, the backend container is mapped to port 5000 of the host, the client container is mapped to port 3000 of the host, and mongodb container is mapped to port 27017 of the host. All containers are connected to the yolo-network bridge network.
 
-
-## 4.  Docker Compose Volume Definition and Usage
-The Docker Compose file includes volume definitions for MongoDB data storage. The relevant section is as follows:
-
-yaml
-
-```
 volumes:
-  mongodata:  # Define Docker volume for MongoDB data
+  mongo_data:
     driver: local
 
 ```
-This volume, mongodb_data, is designated for storing MongoDB data. It ensures that the data remains intact and is not lost even if the container is stopped or deleted.
 
-## 5. Git Workflow to achieve the task
+#### In this setup:
 
-To achieve the task the following git workflow was used:
+- Ports 5000, 3000, and 27017 are mapped between the host and containers.
+- A custom bridge network `custom_network` connects all services for internal communication.
 
-1. Fork the repository from the original repository.
-2. Clone the repo: `git@github.com:Maubinyaachi/yolo-Microservice.git`
-3. Create a .gitignore file to exclude unnecessary     files and directories from version control.
-4. Added Dockerfile for the client to the repo:
-`git add client/Dockerfile`
-5. Add Dockerfile for the backend to the repo:
-`git add backend/dockerfile`
-6. Committed the changes:
-`git commit -m "Added Dockerfiles"`
-7. Added docker-compose file to the repo:
-`git add docker-compose.yml`
-8. Committed the changes:
-`git commit -m "Added docker-compose file"`
-9. Pushed the files to github:
-`git push `
-10. Built the client and backend images:
-`docker compose build`
-11. Pushed the built imags to docker registry:
-`docker compose push`
-12. Deployed the containers using docker compose:
-`docker compose up`
+## 4. Docker-Compose Volume Definition and Usage
 
-13. Created explanation.md file and modified it as the commit messages in the repo will explain.
+- Volume Definition and Usage
+
+Volumes ensure persistent data storage. In the `docker-compose.yml`:
+
+```
+volumes:
+  mongo_data:
+    driver: local
+```
+
+## 5 .Git Workflow
+
+Git Workflow Used
+- Cloning the Repository: Clone the project repository to local machines using the `git clone` command: `https://github.com/Essyuge/yolo.git`.
+- Making Changes: Make changes to files locally, including implementing new features, fixing bugs, or making enhancements.
+- Committing Changes: After making changes, commit them directly to the master branch using the `git add <filename>` and `git commit -m"commit message"` commands.
+- Pushing Changes: Once changes are committed locally, push them to the remote repository using the `git push` command.
+
+## 6. Successful Running of Applications and Debugging Measures
+
+- Deployment and Debugging
+- Successful Deployment: Ensure Docker and Docker Compose are installed.
+- Debugging Measures: Use:
+  - `docker build -t <imagename:version>` to build an image.
+  - `docker images` to check images built.
+  - `docker ps` to check container status.
+  - `docker login` to log in to DockerHub.
+  - `docker push <username:image>` to deploy image to DockerHub.
+  - `docker-compose down` followed by `docker-compose up` for restarts.
+  - `docker-compose logs <service>` for logs.
+
+## 7. Docker Image Tag Naming Standards
+
+- Docker Image Tag Naming Standards
+- Images are tagged using semantic versioning (`v1.0.0`):
+  - `estheruge/backend-service:v1.0.0`
+  - `estheruge/client-service:v1.0.0`
+
+
+## 8. DockerHub Screenshot
+
+### Screenshot of Deployed Image on DockerHub
+
+![Alt Text](<images/backendimage.png>)
+
+![Alt Text](<images/frontendimage.png>)
+
+
+
 
