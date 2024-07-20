@@ -234,6 +234,3 @@ Make sure that you have the following installed:
     sudo docker compose down
     ```
 
-## Contact
-
-Provide your contact information for questions or feedback.
