@@ -3,6 +3,114 @@
 ## 1. Base Image Selection
 
 Alpine Linux was chosen as the base image for its lightweight nature and strong security features. Known for minimalism, it ensures smaller Docker image sizes and faster builds. Alpine's wide support and compatibility also make it ideal for efficient containerized applications, prioritizing both performance and security.
+# Explanation of Implementation Choices
+
+This document explains the reasoning behind various implementation choices made during the process of containerizing the application and setting up a microservice architecture.
+
+## 1. Choice of the Base Image
+
+### Client/Frontend
+
+- **Base Image:** `node:14-alpine3.16`
+- **Reasoning:** The Alpine version of Node.js is chosen for its lightweight nature, which ensures smaller image sizes and faster download and startup times. Version 14 is used for compatibility with the existing application code.
+
+### Backend
+
+- **Base Image:** `node:14-alpine3.16`
+- **Reasoning:** Similar to the frontend, the lightweight Alpine version of Node.js is chosen. Version 14 is used for consistency across the project and compatibility with the backend application code.
+
+### MongoDB
+
+- **Base Image:** `mongo:latest`
+- **Reasoning:** The latest version of MongoDB is chosen to ensure the use of the most up-to-date features and security patches.
+
+## 2. Dockerfile Directives
+
+### Client/Frontend
+
+- **Multi-Stage Build:**
+  - **First Stage (Build):** Uses `node:14-alpine3.16` to install dependencies and build the application.
+  - **Second Stage (Production):** Uses `node:16-alpine3.16` to run the application with only production dependencies.
+- **Directives:**
+  - `WORKDIR /app`: Sets the working directory inside the container.
+  - `COPY package*.json .`: Copies package files to install dependencies.
+  - `RUN npm install`: Installs dependencies.
+  - `COPY . .`: Copies the rest of the application code.
+  - `RUN npm run build && npm prune --production`: Builds the application and removes development dependencies.
+  - `EXPOSE 3000`: Exposes port 3000 for communication.
+  - `CMD ["npm", "start"]`: Starts the application.
+
+### Backend
+
+- **Single-Stage Build:**
+  - Uses `node:14-alpine3.16` to install dependencies and run the application.
+- **Directives:**
+  - `WORKDIR /app`: Sets the working directory inside the container.
+  - `COPY package*.json ./`: Copies package files to install dependencies.
+  - `RUN npm install`: Installs dependencies.
+  - `COPY . .`: Copies the rest of the application code.
+  - `EXPOSE 5000`: Exposes port 5000 for communication.
+  - `CMD ["npm", "start"]`: Starts the application.
+
+## 3. Docker-Compose Networking
+
+- **Application Port Allocation:**
+  - Backend: Maps container port 5000 to host port 5000.
+  - Client: Maps container port 3000 to host port 3000.
+  - MongoDB: Maps container port 27017 to host port 27017.
+- **Bridge Network Implementation:**
+  - A custom bridge network named `custom_network` is created to enable communication between the services.
+
+## 4. Docker-Compose Volume Definition and Usage
+
+- **MongoDB Volume:**
+  - A volume named `mongo_data` is created to persist MongoDB data.
+  - Ensures data persistence across container restarts.
+
+## 5. Git Workflow
+
+- **Branching Strategy:**
+  - `main` branch for production-ready code.
+  - `dev` branch for ongoing development.
+  - Feature branches (`feature/branch-name`) for individual features and fixes.
+- **Commit Messages:**
+  - Use descriptive commit messages for clarity and traceability.
+- **Pull Requests:**
+  - Feature branches are merged into `dev` via pull requests, which are reviewed and tested before merging.
+- **CI/CD:**
+  - Implemented using GitHub Actions to automate the build, test, and deployment processes.
+
+## 6. Successful Running and Debugging Measures
+
+- **Running the Applications:**
+  - Use `sudo docker compose up` to start all services.
+  - Verify services are running by accessing the client and backend endpoints.
+- **Debugging Measures:**
+  - Check container logs using `docker logs <container_name>`.
+  - Use `docker exec -it <container_name> /bin/sh` to access the container shell for manual debugging.
+  - Ensure correct environment variable configurations.
+
+## 7. Good Practices
+
+- **Docker Image Tag Naming Standards:**
+  - Use semantic versioning for image tags (e.g., `v1.0.0`).
+  - Include the service name in the image tag for clarity (e.g., `estheruge/backend-service:v1.0.0`).
+- **Docker Compose:**
+  - Use environment variables for sensitive data and configurations.
+  - Ensure proper port mappings and network configurations for seamless service communication.
+
+## 8. Screenshot of Deployed Image on DockerHub
+
+- ![DockerHub Image](path/to/screenshot.png)
+- **Description:** The screenshot shows the deployed image on DockerHub with its version clearly displayed.
+
+## Contact
+
+For any questions or feedback, please contact:
+
+- **Name:** [Your Name]
+- **Email:** [your.email@example.com]
+- **GitHub:** [https://github.com/yourusername]
 
 ## 2. Dockerfile Directives
 
