@@ -12,7 +12,6 @@ A step-by-step procedure to containerize this application using Docker, setting 
 6. [Ensure Connectivity Between Containers](#ensure-connectivity-between-containers)
 7. [Build and Start Your Microservices](#build-and-start-your-microservices)
 8. [Stop the Application](#stop-the-application)
-9. [Contact](#contact)
 
 ## Overview
 
