@@ -1,215 +1,239 @@
-#   Overview
-This file outlines a step-by-step procedure of how this
-application was containerized using Docker 
+# Project Name
 
-#   Requirements
+A step-by-step procedure to containerize this application using Docker, setting up a microservice architecture.
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Requirements](#requirements)
+3. [Containerize the Client/Frontend](#containerize-the-clientfrontend)
+4. [Containerize the Backend](#containerize-the-backend)
+5. [Configure Microservice Architecture using Docker Compose](#configure-microservice-architecture-using-docker-compose)
+6. [Ensure Connectivity Between Containers](#ensure-connectivity-between-containers)
+7. [Build and Start Your Microservices](#build-and-start-your-microservices)
+8. [Stop the Application](#stop-the-application)
+9. [Contact](#contact)
+
+## Overview
+
+This file outlines a step-by-step procedure of how this application was containerized using Docker.
+
+## Requirements
+
 Make sure that you have the following installed:
-- [Docker](https://docs.docker.com/engine/install/) 
+- [Docker](https://docs.docker.com/engine/install/)
 
-#   Containerize the client/frontend
-- Navigate to the client directory
+## Containerize the Client/Frontend
 
-  `cd client`
+1. **Navigate to the client directory:**
 
-- Create a Dockerfile
+    ```bash
+    cd client
+    ```
 
-  `touch Dockerfile`
+2. **Create a Dockerfile:**
 
-- Configure the Dockerfile using a multi-stage build
-  to ensure that the resultant image is lightweight
+    ```bash
+    touch Dockerfile
+    ```
 
-```
-# Build stage
-FROM node:14-alpine3.16 as build
+3. **Configure the Dockerfile using a multi-stage build to ensure that the resultant image is lightweight:**
 
-# Set the working directory inside the container
-WORKDIR /app
+    ```dockerfile
+    # Build stage
+    FROM node:14-alpine3.16 as build
 
-# Copy package.json and package-lock.json to install dependencies
-COPY package*.json .
+    # Set the working directory inside the container
+    WORKDIR /app
 
-# Install npm dependencies
-RUN npm install
+    # Copy package.json and package-lock.json to install dependencies
+    COPY package*.json .
 
-# Copy the rest of the client application code to the working directory
-COPY . .
+    # Install npm dependencies
+    RUN npm install
 
-# Build the application and  remove development dependencies
-RUN npm run build && \
-    npm prune --production
+    # Copy the rest of the client application code to the working directory
+    COPY . .
 
-# Production stage
-FROM node:16-alpine3.16 as production-stage
+    # Build the application and remove development dependencies
+    RUN npm run build && \
+        npm prune --production
 
-# Set the working directory inside the container
-WORKDIR /app
+    # Production stage
+    FROM node:16-alpine3.16 as production-stage
 
-# Copy the built app from the build stage to the production container
-COPY --from=build /app /app
+    # Set the working directory inside the container
+    WORKDIR /app
 
-# Expose port 3000 to communicate with the outside world
-EXPOSE 3000
+    # Copy the built app from the build stage to the production container
+    COPY --from=build /app /app
 
-# Command to start the application
-CMD ["npm", "start"]
-```
+    # Expose port 3000 to communicate with the outside world
+    EXPOSE 3000
 
-- Create a .dockerignore file
+    # Command to start the application
+    CMD ["npm", "start"]
+    ```
 
-  `touch .dockerignore`
+4. **Create a `.dockerignore` file:**
 
-- In the .dockerignore file, specify which files 
-  to exclude when building the Docker image
+    ```bash
+    touch .dockerignore
+    ```
 
-```
-node_modules
+5. **In the `.dockerignore` file, specify which files to exclude when building the Docker image:**
 
-```
+    ```plaintext
+    node_modules
+    ```
 
-#   Containerize the backend
-- Navigate to the backend directory
+## Containerize the Backend
 
-  `cd backend`
+1. **Navigate to the backend directory:**
 
-- Create a Dockerfile
-- 
-  `touch Dockerfile`
+    ```bash
+    cd backend
+    ```
 
-- Configure the Dockerfile using a multi-stage build
-  to ensure that the resultant image is lightweight
+2. **Create a Dockerfile:**
 
-```
-FROM node:14-alpine3.16
+    ```bash
+    touch Dockerfile
+    ```
 
-# Set the working directory to /app inside the container
-WORKDIR /app
+3. **Configure the Dockerfile using a multi-stage build to ensure that the resultant image is lightweight:**
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+    ```dockerfile
+    FROM node:14-alpine3.16
 
-# Install npm dependencies
-RUN npm install
+    # Set the working directory to /app inside the container
+    WORKDIR /app
 
-# Copy the entire of the application code to the working directory
-COPY . .
+    # Copy package.json and package-lock.json to the working directory
+    COPY package*.json ./
 
+    # Install npm dependencies
+    RUN npm install
 
-# Expose the port on which the Node.js application will run
-EXPOSE 5000
+    # Copy the entire application code to the working directory
+    COPY . .
 
+    # Expose the port on which the Node.js application will run
+    EXPOSE 5000
 
-# Command to start the Node.js application
-CMD ["npm", "start"]
+    # Command to start the Node.js application
+    CMD ["npm", "start"]
+    ```
 
+4. **Create a `.dockerignore` file:**
 
-```
+    ```bash
+    touch .dockerignore
+    ```
 
+5. **In the `.dockerignore` file, specify which files to exclude when building the Docker image:**
 
-- Create a .dockerignore file
+    ```plaintext
+    node_modules
+    ```
 
-  `touch .dockerignore`
+## Configure Microservice Architecture using Docker Compose
 
-- In the .dockerignore file, specify which files 
-  to exclude when building the Docker image
+1. **Navigate to the root directory of the repository and create a `docker-compose.yaml` file:**
 
-```
-node_modules
+    ```bash
+    touch docker-compose.yaml
+    ```
 
-```
+2. **Configure the `docker-compose.yaml` file as follows:**
 
-#   Configure the Microservice Architecture using Docker Compose
-- Navigate to the root directory of the repository
-  and create a docker-compose.yaml file
+    ```yaml
+    version: '3.8'
 
-  `touch docker-compose.yaml`
+    services:
+      # Backend service configuration
+      backend:
+        build: ./backend  # Build the backend service using the Dockerfile in the ./backend directory
+        image: estheruge/backend-service:v1.0.0  # Tag the built image with a specific version
+        container_name: backend_container  # Name of the backend container
+        environment:
+          - MONGODB_URI=mongodb://mongo:27017/yolomy  # Set the MongoDB connection URI for the backend
+        ports:
+          - "5000:5000"  # Map port 5000 of the container to port 5000 on the host
+        networks:
+          - custom_network  # Attach backend service to the custom network
+        depends_on:
+          - mongo  # Ensure MongoDB service is started before the backend service
 
-- Configure the docker-compose.yaml file as follows
+      # Client service configuration
+      client:
+        build: ./client  # Build the client service using the Dockerfile in the ./client directory
+        image: estheruge/client-service:v1.0.0  # Tag the built image with a specific version
+        container_name: client_container  # Name of the client container
+        environment:
+          - NODE_ENV=production  # Set Node.js environment to production
+        ports:
+          - "3000:3000"  # Map port 3000 of the container to port 3000 on the host
+        depends_on:
+          - backend  # Ensure backend service is started before the client service
+        networks:
+          - custom_network  # Attach client service to the custom network
+        stdin_open: true  # Keep stdin open so container can accept input
+        tty: true  # Allocate a pseudo-TTY for the container, useful for debugging
 
-```
-version: '3.8'
+      # MongoDB service configuration
+      mongo:
+        image: mongo:latest  # Use the latest MongoDB Docker image
+        container_name: mongo_container  # Name of the MongoDB container
+        networks:
+          - custom_network  # Attach MongoDB service to the custom network
+        ports:
+          - "27017:27017"  # Map port 27017 of the container to port 27017 on the host
+        volumes:
+          - mongo_data:/data/db  # Mount a volume named 'mongo_data' for MongoDB data persistence
 
-services:
-  # Backend service configuration
-  backend:
-    build: ./backend  # Build the backend service using the Dockerfile in the ./backend directory
-    image: estheruge/backend-service:v1.0.0  # Tag the built image with a specific version
-    container_name: backend_container  # Name of the backend container
-    environment:
-      - MONGODB_URI=mongodb://mongo:27017/yolomy  # Set the MongoDB connection URI for the backend
-    ports:
-      - "5000:5000"  # Map port 5000 of the container to port 5000 on the host
     networks:
-      - custom_network  # Attach backend service to the custom network
-    depends_on:
-      - mongo  # Ensure MongoDB service is started before the backend service
+      custom_network:
+        driver: bridge  # Use the bridge network driver for the custom network
 
-  # Client service configuration
-  client:
-    build: ./client  # Build the client service using the Dockerfile in the ./client directory
-    image: estheruge/client-service:v1.0.0  # Tag the built image with a specific version
-    container_name: client_container  # Name of the client container
-    environment:
-      - NODE_ENV=production  # Set Node.js environment to production
-    ports:
-      - "3000:3000"  # Map port 3000 of the container to port 3000 on the host
-    depends_on:
-      - backend  # Ensure backend service is started before the client service
-    networks:
-      - custom_network  # Attach client service to the custom network
-    stdin_open: true  # Keep stdin open so container can accept input
-    tty: true  # Allocate a pseudo-TTY for the container, useful for debugging
-
-  # MongoDB service configuration
-  mongo:
-    image: mongo:latest  # Use the latest MongoDB Docker image
-    container_name: mongo_container  # Name of the MongoDB container
-    networks:
-     - custom_network  # Attach MongoDB service to the custom network
-    ports:
-      - "27017:27017"  # Map port 27017 of the container to port 27017 on the host
     volumes:
-      - mongo_data:/data/db  # Mount a volume named 'mongo_data' for MongoDB data persistence
+      mongo_data:
+        driver: local  # Use the local volume driver for 'mongo_data' volume
+    ```
 
-networks:
-  custom_network:
-    driver: bridge  # Use the bridge network driver for the custom network
+## Ensure Connectivity Between Containers
 
-volumes:
-  mongo_data:
-    driver: local  # Use the local volume driver for 'mongo_data' volume
+1. **Navigate to the `server.js` file in the backend folder and change the `mongodb_url` to point to your MongoDB container instead of `localhost`.**
 
+    ```javascript
+    // Connecting to the Database
+    let mongodb_url = 'mongodb://127.0.0.1';
+    dbName = 'yolomy';
+    ```
 
-```
+    Update to:
 
-
-#   Ensure connectivity between the backend and the database containers
-- Navigate to the server.js file in the backend folder
-  and change the "mongodb_url" to point to your mongodb
-  container instead of "localhost". In my case it was as follows
-
-  ```
-  // Connecting to the Database
-  let mongodb_url = 'mongodb://127.0.0.1';
-  dbName = 'yolomy';
-  ```
- 
-
-  ```
-  environment:
+    ```yaml
+    environment:
       - MONGODB_URI=mongodb://mongo:27017/yolomy  # Set the MongoDB connection URI for the backend
+    ```
 
-  ```
+## Build and Start Your Microservices
 
-#   Build and start your microservices using Docker Compose Up
-- Navigate to the root folder of the repository (where your
-  docker-compose.yml file is located) and initialize your
-  microservice application using the following command
+1. **Navigate to the root folder of the repository (where your `docker-compose.yaml` file is located) and initialize your microservice application using the following command:**
 
-  `sudo docker compose up`
-  
-#   Stop the application using Docker Compose Down
-- In the same terminal where you launched your microservices,
-  press "ctrl+c" to stop the application and terminate it using
-  following command
+    ```bash
+    sudo docker compose up
+    ```
 
-  `sudo docker compose down`
+## Stop the Application
+
+1. **In the same terminal where you launched your microservices, press `Ctrl+C` to stop the application and terminate it using the following command:**
+
+    ```bash
+    sudo docker compose down
+    ```
+
+## Contact
+
+Provide your contact information for questions or feedback.
