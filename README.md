@@ -34,7 +34,6 @@ RUN npm install
 # Copy the rest of the client application code to the working directory
 COPY . .
 
-
 # Build the application and  remove development dependencies
 RUN npm run build && \
     npm prune --production
