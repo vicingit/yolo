@@ -90,15 +90,6 @@ This document explains the reasoning behind various implementation choices made 
   - Use `docker exec -it <container_name> /bin/sh` to access the container shell for manual debugging.
   - Ensure correct environment variable configurations.
 
-## 7. Good Practices
-
-- **Docker Image Tag Naming Standards:**
-  - Use semantic versioning for image tags (e.g., `v1.0.0`).
-  - Include the service name in the image tag for clarity (e.g., `victore/backend-service:v1.0.0`).
-- **Docker Compose:**
-  - Use environment variables for sensitive data and configurations.
-  - Ensure proper port mappings and network configurations for seamless service communication.
-
 
 ## 2. Dockerfile Directives
 
