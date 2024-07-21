@@ -194,7 +194,7 @@ volumes:
 ## 5 .Git Workflow
 
 Git Workflow Used
-- Cloning the Repository: Clone the project repository to local machines using the `git clone` command: `https://github.com/Essyuge/yolo.git`.
+- Cloning the Repository: Clone the project repository to local machines using the `git clone` command: `https://github.com/vicingit/yolo`.
 - Making Changes: Make changes to files locally, including implementing new features, fixing bugs, or making enhancements.
 - Committing Changes: After making changes, commit them directly to the master branch using the `git add <filename>` and `git commit -m"commit message"` commands.
 - Pushing Changes: Once changes are committed locally, push them to the remote repository using the `git push` command.
