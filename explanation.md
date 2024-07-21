@@ -99,18 +99,6 @@ This document explains the reasoning behind various implementation choices made 
   - Use environment variables for sensitive data and configurations.
   - Ensure proper port mappings and network configurations for seamless service communication.
 
-## 8. Screenshot of Deployed Image on DockerHub
-
-- ![DockerHub Image](path/to/screenshot.png)
-- **Description:** The screenshot shows the deployed image on DockerHub with its version clearly displayed.
-
-## Contact
-
-For any questions or feedback, please contact:
-
-- **Name:** [Your Name]
-- **Email:** [your.email@example.com]
-- **GitHub:** [https://github.com/yourusername]
 
 ## 2. Dockerfile Directives
 
