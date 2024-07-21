@@ -94,7 +94,7 @@ This document explains the reasoning behind various implementation choices made 
 
 - **Docker Image Tag Naming Standards:**
   - Use semantic versioning for image tags (e.g., `v1.0.0`).
-  - Include the service name in the image tag for clarity (e.g., `estheruge/backend-service:v1.0.0`).
+  - Include the service name in the image tag for clarity (e.g., `victore/backend-service:v1.0.0`).
 - **Docker Compose:**
   - Use environment variables for sensitive data and configurations.
   - Ensure proper port mappings and network configurations for seamless service communication.
@@ -138,7 +138,7 @@ services:
   # Backend service configuration
   backend:
     build: ./backend
-    image: estheruge/backend-service:v1.0.0
+    image: victore/backend-service:v1.0.0
     container_name: backend_container
     environment:
       - MONGODB_URI=mongodb://mongo:27017/yolomy
@@ -152,7 +152,7 @@ services:
   # Client service configuration
   client:
     build: ./client
-    image: estheruge/client-service:v1.0.0
+    image: victore/client-service:v1.0.0
     container_name: client_container
     environment:
       - NODE_ENV=production
@@ -228,17 +228,8 @@ Git Workflow Used
 
 - Docker Image Tag Naming Standards
 - Images are tagged using semantic versioning (`v1.0.0`):
-  - `estheruge/backend-service:v1.0.0`
-  - `estheruge/client-service:v1.0.0`
-
-
-## 8. DockerHub Screenshot
-
-### Screenshot of Deployed Image on DockerHub
-
-![Alt Text](<images/backendimage.png>)
-
-![Alt Text](<images/frontendimage.png>)
+  - `victore/backend-service:v1.0.0`
+  - `victore/client-service:v1.0.0`
 
 
 
