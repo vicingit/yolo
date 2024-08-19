@@ -232,4 +232,18 @@ Make sure that you have the following installed:
     ```bash
     sudo docker compose down
     ```
+## Orchestration with Kubernetes
 
+###  Deploying K8s Manifests
+
+To deploy the Kubernetes resources, run the following commands:
+
+```bash
+kubectl apply -f persistent-volume.yaml
+kubectl apply -f persistent-volume-claim.yaml
+kubectl apply -f database-statefulset.yaml
+kubectl apply -f database-service.yaml
+kubectl apply -f backend-deployment.yaml
+kubectl apply -f backend-service.yaml
+kubectl apply -f frontend-deployment.yaml
+kubectl apply -f frontend-service.yaml
