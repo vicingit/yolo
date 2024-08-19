@@ -1,0 +1,45 @@
+version: "3.8"
+
+services:
+  frontend:
+    build:
+      context: ./client
+    container_name: maubi/myapp-frontend:v2.0.1 
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - trust.net
+
+  backend:
+    build:
+      context: ./backend
+    container_name: maubi/myapp-backend :v1.0.1
+    environment:
+      MONGO_URL: mongodb://MONGO:27017/mydatabase
+    ports:
+      - "5000:5000"  
+    depends_on:
+      - mongo
+    networks:
+      - trust.net
+
+  mongo:
+    image: mongo:4.4.20
+    container_name: mongo-container_name
+    environment:
+      MONGO_INITDB_DATABASE: mydatabase
+    ports:
+      - "27017:27017"
+    volumes:
+      - bluewaters:/data/db
+    networks:
+      - trust.net
+
+volumes:
+  bluewaters:
+
+networks:
+  trust.net:
+    driver:  bridge
