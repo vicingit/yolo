@@ -14,7 +14,6 @@ Vagrant.configure("2") do |config|
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "geerlingguy/ubuntu2004"
   
-  
 
 
   config.ssh.insert_key = false
